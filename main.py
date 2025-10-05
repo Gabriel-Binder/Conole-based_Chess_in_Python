@@ -504,6 +504,7 @@ class Moves: #using classes just to make it more readable
                 print("Target square is occupied and move is not a capture.")
                 return False #check if target square is emtpy
 
+
         if piece.upper() == 'P':
             direction = -1 if is_white else 1
             start_row = 6 if is_white else 1
@@ -529,6 +530,9 @@ class Moves: #using classes just to make it more readable
                 else:
                     print("Promotion only allowed on final rank.")
                     return False
+            if to_row == (0 if is_white else 7) and not move.get("promotion"):
+                print("Pawns have to promote on last row")
+                return False
 
             if is_white and to_row >= origin[0]:
                 print("White pawns cannot move backward.")
@@ -876,8 +880,7 @@ class Main:
         surrender = False
         while True:
             is_white = True
-            for row in board:
-                print(row)
+            Main.print_board()
             if not Moves.has_valid_move():
                 if Moves.is_king_in_check(board):
                     print("Checkmate! Black Wins!\nWhites King is in check and white has no remaining moves!")
@@ -898,13 +901,13 @@ class Main:
             if surrender: break;
 
             Main.apply_move(move)
-            move_list.append(move_input)
-            print("Played Moves:", move_list)
-            for row in board:
-                print(row)
-
             last_move = move
             is_white = not is_white
+            print(Moves.is_king_in_check(board))
+            move_list.append(move_input + ( '#' if not Moves.has_valid_move() and Moves.is_king_in_check(board) else '+' if Moves.is_king_in_check(board) else ''))
+            print("Played Moves:", move_list)
+
+            Main.print_board()
             if not Moves.has_valid_move():
                 if Moves.is_king_in_check(board):
                     print("Checkmate! White Wins!\nBlacks King is in check and white has no remaining moves!")
@@ -925,9 +928,11 @@ class Main:
             if surrender: break;
 
             Main.apply_move(move)
-            move_list.append(move_input)
-            print("Played Moves:", move_list)
             last_move = move
+            is_white = not is_white
+            print(Moves.is_king_in_check(board))
+            move_list.append(move_input + ('+' if Moves.is_king_in_check(board) else ''))
+            print("Played Moves:", move_list)
         while True:
             after_game = input()
             if Main.is_commands(after_game):
@@ -1049,6 +1054,34 @@ class Main:
         if input in commands:
             return True
         else: return False
+
+    @staticmethod
+    def print_board() -> None:
+        piece_symbols = {
+            'k': '♔', 'q': '♕', 'r': '♖', 'b': '♗', 'n': '♘', 'p': '♙',
+            'K': '♚', 'Q': '♛', 'R': '♜', 'B': '♝', 'N': '♞', 'P': '♟',
+            'O': '\u2003', 'X': '\u2003'
+        }
+        reset = "\033[0m"
+        white_bg = "\033[100m"
+        black_bg = "\033[40m"
+
+        # Fullwidth letters a-h
+        print("   \uFF41  \uFF42  \uFF43  \uFF44  \uFF45  \uFF46  \uFF47  \uFF49")
+
+        # Map normal numbers 1-8 to fullwidth numbers
+        fullwidth_numbers = ["\uFF11", "\uFF12", "\uFF13", "\uFF14", "\uFF15", "\uFF16", "\uFF17", "\uFF18"]
+
+        for r, row in enumerate(board):
+            rank_label = fullwidth_numbers[8 - r - 1]  # 8-r mapped to fullwidth
+            print(f"{rank_label} ", end="")
+            for c, cell in enumerate(row):
+                piece = piece_symbols.get(cell, cell)
+                bg = white_bg if (r + c) % 2 == 0 else black_bg
+                print(f"{bg} {piece} {reset}", end="")
+            print(f" {rank_label}")
+        print("   \uFF41  \uFF42  \uFF43  \uFF44  \uFF45  \uFF46  \uFF47  \uFF49")
+
 
 if __name__ == '__main__':
     Main()
